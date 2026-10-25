@@ -81,6 +81,8 @@ Start-ScheduledTask -TaskName WinHealthMonitor   # ลองรันเดี�
 
 ## ตัวอย่างข้อความที่ได้รับ
 
+<img width="525" height="235" alt="image" src="https://github.com/user-attachments/assets/e5fc38cf-5520-4571-b6c2-b811a2070911" />
+
 ```
 ⚠️ ดิสก์ทำงานหนักผิดปกติ
 พบปัญหาเมื่อ 2026-10-25 15:04:12
