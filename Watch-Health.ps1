@@ -97,6 +97,7 @@ function Read-JsonSafe {
 # ---------------------------------------------------------------- config ----
 $defaultConfig = @{
     webhookUrl       = ''
+    dotEnvFile       = '.env'
     statePath        = 'state/state.json'
     logPath          = 'logs/health-monitor.log'
     logMaxKB         = 2048
@@ -190,8 +191,44 @@ function Save-State {
 }
 
 # --------------------------------------------------------------- discord ----
+function Get-DotEnvValue {
+    <#
+        Minimal .env reader: KEY=VALUE, # comments, optional quotes, optional "export " prefix.
+        Returns $null when the file or key does not exist.
+    #>
+    param(
+        [string]$Path,
+        [string]$Key
+    )
+    if (-not (Test-Path -LiteralPath $Path)) { return $null }
+    try {
+        foreach ($line in (Get-Content -LiteralPath $Path -Encoding UTF8)) {
+            $t = $line.Trim()
+            if (-not $t -or $t.StartsWith('#')) { continue }
+            $t = $t -replace '^(?i)export\s+', ''
+            $idx = $t.IndexOf('=')
+            if ($idx -lt 1) { continue }
+            if ($t.Substring(0, $idx).Trim() -ne $Key) { continue }
+            $v = $t.Substring($idx + 1).Trim()
+            if ($v.Length -ge 2) {
+                if (($v.StartsWith('"') -and $v.EndsWith('"')) -or ($v.StartsWith("'") -and $v.EndsWith("'"))) {
+                    $v = $v.Substring(1, $v.Length - 2)
+                }
+            }
+            return $v.Trim()
+        }
+    }
+    catch { }
+    return $null
+}
+
 function Get-Webhook {
+    # priority: process env var -> .env file -> config.local.json -> config.json
     $u = $env:DISCORD_WEBHOOK_URL
+    if ([string]::IsNullOrWhiteSpace($u)) {
+        $envPath = Resolve-PathFromRoot $script:Cfg.dotEnvFile
+        $u = Get-DotEnvValue -Path $envPath -Key 'DISCORD_WEBHOOK_URL'
+    }
     if ([string]::IsNullOrWhiteSpace($u)) { $u = $script:Cfg.webhookUrl }
     if ([string]::IsNullOrWhiteSpace($u)) { return $null }
     return $u.Trim()
@@ -364,7 +401,7 @@ try {
     if ($TestAlert) {
         $webhook = Get-Webhook
         if (-not $webhook) {
-            Write-Log 'no webhook configured (set DISCORD_WEBHOOK_URL or config.local.json)' 'ERROR'
+            Write-Log 'no webhook configured (set DISCORD_WEBHOOK_URL in .env, or as an environment variable)' 'ERROR'
             exit 1
         }
         $ok = Send-DiscordMessage -Webhook $webhook -Title '✅ Test alert' `
@@ -554,7 +591,7 @@ try {
         foreach ($a in $alerts) {
             $state.alerts[$a.key] = @{ active = $true; lastSent = $null; severity = $a.severity }
         }
-        if (-not $webhook -and $alerts.Count -gt 0) { Write-Log "no webhook configured - $($alerts.Count) alert(s) not sent" 'WARN' }
+        if (-not $webhook -and $alerts.Count -gt 0) { Write-Log "no webhook configured ($($script:Cfg.dotEnvFile) / env var) - $($alerts.Count) alert(s) not sent" 'WARN' }
     }
 
     # ---------- persist snapshot for next run

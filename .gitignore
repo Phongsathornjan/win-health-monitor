@@ -8,6 +8,7 @@ logs/
 config.local.json
 .env
 .env.*
+!.env.example
 
 # editor / OS noise
 .vscode/

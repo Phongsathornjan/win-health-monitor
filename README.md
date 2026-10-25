@@ -39,24 +39,23 @@
 2. เลือก channel ปลายทาง → **Copy Webhook URL**
 3. เก็บ URL ไว้ (จะใช้ในขั้นถัดไป)
 
-### 2) ตั้งค่า webhook (ไม่เก็บลง git)
+### 2) ใส่ webhook ในไฟล์ `.env`
 
 ```powershell
-# แบบถาวรระดับผู้ใช้ (แนะนำ)
-[Environment]::SetEnvironmentVariable('DISCORD_WEBHOOK_URL', 'https://discord.com/api/webhooks/...', 'User')
+Copy-Item .env.example .env
+notepad .env
+# ใส่บรรทัดนี้ (แทนที่ค่าตัวอย่าง):
+# DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/xxxx/xxxx
 ```
 
-หรือจะใช้ไฟล์ก็ได้ (ถูก gitignore ไว้แล้ว):
+ไฟล์ `.env` ถูก `.gitignore` ไว้แล้ว จึงไม่มีทางหลุดขึ้น GitHub
 
-```powershell
-Copy-Item config.local.example.json config.local.json
-notepad config.local.json
-```
+> **ลำดับความสำคัญ:** environment variable `DISCORD_WEBHOOK_URL` → ไฟล์ `.env` → `config.local.json` → `config.json`
+> ถ้าอยากใช้ env var แทน: `[Environment]::SetEnvironmentVariable('DISCORD_WEBHOOK_URL','...','User')` แล้วเปิด PowerShell ใหม่
 
 ### 3) ทดสอบ
 
 ```powershell
-# เปิด PowerShell ใหม่ก่อน (ให้อ่าน env var ใหม่)
 cd C:\Users\Phongsathorn\projects\win-health-monitor
 
 .\Watch-Health.ps1 -TestAlert      # ต้องมีข้อความทดสอบใน Discord
@@ -106,7 +105,8 @@ Process: DtsApo4Service (PID 7160) | RAM: 2262 MB
 
 | key | ค่าเริ่มต้น | ความหมาย |
 |---|---|---|
-| `webhookUrl` | `""` | ใช้เมื่อไม่ได้ตั้ง env var `DISCORD_WEBHOOK_URL` |
+| `webhookUrl` | `""` | ใช้เมื่อไม่มีทั้ง env var และ `.env` |
+| `dotEnvFile` | `.env` | ไฟล์ `.env` ที่อ่าน `DISCORD_WEBHOOK_URL` |
 | `statePath` | `state/state.json` | ไฟล์เก็บสถานะระหว่างรอบ |
 | `logPath` | `logs/health-monitor.log` | ไฟล์ log (rotate อัตโนมัติ) |
 | `logMaxKB` | `2048` | ขนาดสูงสุดก่อน rotate |
@@ -169,9 +169,9 @@ Task Scheduler (ทุก 1 นาที)
 
 ## ความปลอดภัย
 
-- **ห้าม commit webhook URL** — ไฟล์ `config.local.json` และ `state/` ถูก `.gitignore` ไว้แล้ว
-- แนะนำให้ตั้งผ่าน **environment variable** มากกว่าใส่ในไฟล์
-- log ไม่เคยพิมพ์ webhook URL ออกมา (และไม่ log ข้อมูลติตต่อผู้ใช้)
+- **ห้าม commit webhook URL** — `.env`, `config.local.json` และ `state/` ถูก `.gitignore` ไว้แล้ว
+- `.env` อ่านทุกครั้งที่รัน (แก้แล้วมีผลทันที ไม่ต้องรีสตาร์ท task)
+- log ไม่เคยพิมพ์ webhook URL ออกมา (และไม่ log ข้อมูลติดต่อผู้ใช้)
 - สคริปต์ไม่ต้อง admin และไม่แก้ registry/service ใด ๆ
 
 ---

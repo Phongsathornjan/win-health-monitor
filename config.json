@@ -1,5 +1,6 @@
 {
   "webhookUrl": "",
+  "dotEnvFile": ".env",
   "statePath": "state/state.json",
   "logPath": "logs/health-monitor.log",
   "logMaxKB": 2048,

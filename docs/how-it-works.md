@@ -15,7 +15,7 @@
            ▼
 ┌──────────────────────────────────────────────────────────────┐
 │ 1. LOAD                                                      │
-│    config.json + config.local.json (override) + env var       │
+│    config.json + config.local.json + .env + env var           │
 │    state/state.json  (ผลรอบก่อน)                              │
 ├──────────────────────────────────────────────────────────────┤
 │ 2. SAMPLE                                                    │
@@ -40,11 +40,25 @@
 └──────────────────────────────────────────────────────────────┘
 ```
 
+## 1.1 ลำดับการอ่านค่า (config resolution)
+
+ค่าตั้งต้นในสคริปต์ → ทับด้วย `config.json` → ทับด้วย `config.local.json` (ถ้ามี)
+
+ส่วน **webhook URL** มีลำดับแยก (ตัวแรกที่เจอชนะ):
+
+| ลำดับ | แหล่ง | ใช้เมื่อ |
+|---|---|---|
+| 1 | env var `DISCORD_WEBHOOK_URL` | ใช้ชั่วคราว / CI |
+| 2 | ไฟล์ `.env` (`dotEnvFile` ใน config) | **วิธีหลักที่แนะนำ** |
+| 3 | `config.local.json` → `webhookUrl` | ทางเลือก |
+| 4 | `config.json` → `webhookUrl` | ค่าเริ่มต้น (ว่าง) |
+
+ตัวอ่าน `.env` รองรับ: คอมเมนต์ `#`, บรรทัดว่าง, `export KEY=VALUE`, และค่าที่ครอบด้วย `"` หรือ `'`
+อ่านไฟล์ใหม่ทุกครั้งที่รัน → แก้ `.env` แล้วมีผลรอบถัดไปทันที (ไม่ต้องรีสตาร์ท Task)
+
 ---
 
-## 2. ทำไมไม่ใช้ `% Disk Time` ของ Windows
-
-บน NVMe หลายรุ่น (รวมถึง Samsung PM9A1 + Microsoft NVMe driver บน Windows 11 25H2) ตัวชี้วัด **% Disk Time / % Idle Time** รายงานผิดพลาดได้:
+## 2. ทำไมไม่ใช้ `% Disk Time` ของ Windowsบน NVMe หลายรุ่น (รวมถึง Samsung PM9A1 + Microsoft NVMe driver บน Windows 11 25H2) ตัวชี้วัด **% Disk Time / % Idle Time** รายงานผิดพลาดได้:
 
 - วัดจริงบนเครื่องทดสอบ: `busy = 80–370%`, `idle = 1–8%` **ตลอดเวลา** แม้ขณะที่ทุก process รวมกันทำ I/O ไม่ถึง 6 MB/s
 - ขณะเดียวกัน ค่าที่ "นิ่ง" และตรวจสอบได้คือ **ตัวนับไบต์สะสม (cumulative byte counter)**
