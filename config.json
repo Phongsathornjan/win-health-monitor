@@ -1,0 +1,35 @@
+{
+  "webhookUrl": "",
+  "statePath": "state/state.json",
+  "logPath": "logs/health-monitor.log",
+  "logMaxKB": 2048,
+  "cooldownMinutes": 60,
+  "maxAlertsPerDay": 24,
+  "notifyRecovery": true,
+  "trackProcessIo": true,
+  "topProcessCount": 5,
+  "ignoreProcesses": [
+    "Idle",
+    "System",
+    "Registry",
+    "Memory Compression",
+    "Secure System"
+  ],
+  "watchServices": [
+    "Audiosrv",
+    "AudioEndpointBuilder",
+    "Dnscache",
+    "WinDefend"
+  ],
+  "thresholds": {
+    "processRamMB": 1500,
+    "processCpuPercent": 70,
+    "processCpuSamples": 3,
+    "totalRamPercent": 90,
+    "systemCpuPercent": 90,
+    "systemCpuSamples": 5,
+    "diskReadMBps": 50,
+    "diskWriteMBps": 50,
+    "diskSamples": 3
+  }
+}

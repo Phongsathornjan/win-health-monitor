@@ -1,0 +1,17 @@
+# runtime artifacts
+state/
+logs/
+*.tmp
+*.log
+
+# local secrets / overrides
+config.local.json
+.env
+.env.*
+
+# editor / OS noise
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
+.DS_Store
